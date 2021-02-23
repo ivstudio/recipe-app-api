@@ -1,15 +1,16 @@
-from django.contrib.auth import get_user_model
 from django.test import TestCase
+from django.contrib.auth import get_user_model
 from django.urls import reverse
-from rest_framework import status
+
 from rest_framework.test import APIClient
+from rest_framework import status
 
 CREATE_USER_URL = reverse('user:create')
 TOKEN_URL = reverse('user:token')
 
 
 def create_user(**params):
-    return get_user_model().objects.create(**params)
+    return get_user_model().objects.create_user(**params)
 
 
 class PublicUserApiTest(TestCase):
@@ -60,15 +61,18 @@ class PublicUserApiTest(TestCase):
 
     def test_create_token_for_user(self):
         """Test that token is created for the user"""
-        payload = {'email': 'john@helloworld.com', 'password': 'Test123_%43'}
+        payload = {
+            'email': 'johndoe@test.com',
+            'password': 'testpass12345',
+            'name': 'John Doe',
+        }
 
-        create_user(payload)
+        create_user(**payload)
         res = self.client.post(TOKEN_URL, payload)
-
         self.assertIn('token', res.data)
         self.assertEqual(res.status_code, status.HTTP_200_OK)
 
-    def test_create_token_invelid_credentials(self):
+    def test_create_token_invalid_credentials(self):
         """Test that token in not create if invalid credential are given"""
         create_user(email='test@test.com', password='testpass')
         payload = {'email': 'test@test.com', 'password': 'invalid-pass'}
